@@ -1,0 +1,1 @@
+This repository holds a collection of cnc programs written entirely in g code to generate various patterns that can be useful to ornamental turning.
