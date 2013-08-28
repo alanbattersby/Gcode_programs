@@ -1,5 +1,5 @@
-﻿(-----------------------------------------------------------------------)
-(  GWheels - a program to simulate a simple geometric chuck		)
+(-----------------------------------------------------------------------)
+(  Wheels - a program to simulate a simple geometric chuck		)
 (  Created By:  Alan Battersby	August 2013				)
 (									)
 (  This program is free software: you can redistribute it and/or modify )
@@ -39,6 +39,10 @@
 #<_resultX>	= #31	( X coordinate of vector result )
 #<_resultY> 	= #32	( Y coordinate of vector result )
 #<_resultZ> 	= #33	( Z coordinate of vector result )
+
+#<_root1>	= #31	( first root of quadratic	)
+#<_root2>	= #32 	( second root of quadratic	)
+#<_nroots>	= #33	( number of roots of quadratic	)
 
 ( Main Program locations						)
 #<_UseRotary>		= #40	(flag is 1 if a rotary machine		)
@@ -179,17 +183,17 @@ o<Cap> sub
 o<Cap> endsub
 (********************* Wheels Code *********************)
 ( Basic offsets for a Chuck stage record		)
-#<_ar>		= 1	( radius of wheel		)
-#<_ai>		= 2	( phase of wheel		)
+#<_ar>		= 1	( real component of amplitude	)
+#<_ai>		= 2	( imaj component of amplitude	)
 #<_freq>	= 3	( speed of wheel		)
 #<_Offset>	= 3	( Size of record for a Wheel	)
 
 (Subroutine to create a new stage and add to chuck)
 o<Create_Wheel> sub
-	(param #1 is radius		)
-	(param #2 is phase		)
-	(param #3 is speed		)
-	(local #4 is next free address	)
+	(param #1 is areal			)
+	(param #2 is aimaj			)
+	(param #3 is freq			)
+	(local #4 is next free address		)
 
 	#4 = [#<_Base> + #<_Count> * #<_Offset>]  ( next free index)
 	#[#4 + #<_ar>]	= [#1]
@@ -398,8 +402,8 @@ o<Wheel_Vector> endsub
 (*******************************************************)
 ( Next Section is movement so change to suit your layout)
 ( In my setup the axes of my machine are 		)
-(	cnc x = headstock or cutter x movement		)
-(	cnc y = headstock or cutter y pumping movement	)
+(	cnc x = chuck x movement			)
+(	cnc y = chuck y pumping movement		)
 (	cnc z = surface profile				)
 (	cnc w = depth of cut				)
 (	cnc c = rotation of spindle			)
@@ -502,11 +506,11 @@ o<GCD> endsub
 
 (***********************************************************************)
 ( Model of machine assumes the following physical configuration		)
-(	X is lateral axis for headstock or cutter lateral movement	)
-(	Y is vertical axis for headstock or cutter movement		)
-(	Z is axis along spindle for profile or depth cut		)
+(	X is lateral axis for headstock lateral movement		)
+(	Y is vertical axis for headstock movement			)
+(	Z is axis along spindle for pumping movement			)
 (	C is rotation of spindle axis					)
-(	B is axis of rotation of cutter	not yet implemented		)
+(	B is axis of rotation of cutter					)
 (	U is axis to use for tool movement towards spindle i.e YZ plane	)
 (	W is axis to use for tool movement towards face i.e XY plane	)
 (									)
@@ -620,12 +624,12 @@ o<Generate_Path> endsub
 #<_ProfileHeightAxis>	= 2	( profile in z direction		)
 #<_ProfileBaseAxis>	= 3     ( 0 if X, 1 if Y, 2 if Z, 3 if radial	)
 
-(Create Wheels collection 	)
-(param #1 is radius of wheel 	)
-(param #2 is phase of wheel	)
-(param #2 is speed of wheel 	)
+(Create Wheels collection 			)
+(param #1 is real component of amplitude 	)
+(param #2 is imajinary component of amplitude	)
+(param #2 is frequency	of wheel rotation	)
 
-#<_Count> = 0 (initialise count)
+#<_Count> = 0
 o<Create_Wheel> call [10] [0] [1] 
 o<Create_Wheel> call [5] [0] [7] 
 o<Create_Wheel> call [3.33] [90] [-17] 
@@ -655,7 +659,7 @@ o<NTurns> call
 g61
 G10 L2 P1 X0 Y0 Z0 (ensure that G54 is set to machine zero)	
 g90
-o<MoveToSafeHeight> call [#<_Safeheight>]
+o<MoveToSafeHeight> call
 
 (param #1 is start angle			)
 (param #2 in angle increment			)

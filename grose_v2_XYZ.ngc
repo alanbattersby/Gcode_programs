@@ -1,4 +1,4 @@
-﻿(	Main Table starting locations )
+(	Main Table starting locations )
 #<_Main_Count>	= #200	( Number of Rosettes on Main	)
 #<_MainSpindle>	= 200	( start of Rosettes on Main Spindle	)
 				( data starts at #<_MainSpindle + 1>)
@@ -21,9 +21,6 @@
 #<_resultX>	= #33	( X coordinate of vector result 		)
 #<_resultY> 	= #34	( Y coordinate of vector result 		)
 #<_resultZ> 	= #35	( Z coordinate of vector result 		)
-#<_root1>	= #36	( first root of quadratic			)
-#<_root2>	= #37 	( second root of quadratic			)
-#<_nroots>	= #38	( number of roots of quadratic			)
 
 ( Main Program locations						)
 #<_UseChuck>		= #50	(flag is 1 if using chuck		)
@@ -658,28 +655,39 @@ o<Height> sub (param #1 is mill x )
 		 (local #10 is dist between points )
 
 		#10 = [#<_ProfileInc> ]
+		(LOG, param is #1)
 	o<ifzh1> if [#1 lt  #<_ProfileStart>] 
 		#<_result> = 0	
+		(LOG, param less than range)
 	o<ifzh1> elseif  [ #1 gt #<_ProfileNd>]
 		#<_result> = 0	
+		(LOG, param gtr than range)
 	o<ifzh1> elseif  [ #1 eq #<_ProfileStart>]
 		#<_result> = [##<_ProfileData>]
 	o<ifzh1> else
 		#2 = [[ #1 - #<_ProfileStart> ] / #<_ProfileInc>]
+		
+		(LOG, indx is #2)
 		#3 = FIX [#2]
+		(LOG, fix[#2] is #3)
 		#9 = [#<_ProfileStart> + [#3 * #<_ProfileInc>]]
 		#4 = [#<_ProfileData> + #3]
+		(LOG, p[#4] is ##4)
 		#5 = FUP [#2]
+		(LOG, fup[#2] is #5)
 		#6 = [#<_ProfileData> + #5]
+		(LOG, p[#6] is ##6)
 		#7 = [[#1 - #9] / #10]
+		(LOG, p1 is #1 p9 is #9 p10 is #10 giving f is #7)
 		o<linterp> call [##4] [#7] [##6]
 		#8 = [#<_result> + ##4]
+		(LOG, height is #8)
 		#<_result> = [#8]
 	o<ifzh1> endif
 o<Height> endsub
 
 ( Create a ramp profile for testing )
-o<Linear> sub  (param #1 is range start 	)
+o<LinearZ> sub  (param #1 is range start 	)
 	        (param #2 is range inc  	)	
 	        (param #3 is range end		)
 
@@ -697,145 +705,18 @@ o<Linear> sub  (param #1 is range start 	)
 		#<_ProfileNd>	 = [#3]
 		#6 = FIX[[#3 - #1] / #2]
 		#<_ProfileCount> = [#6 + 1]
+		(LOG, profile count is #6)
 		#7 = [0]
 
 		o<lz1> while [#7 le #6]
 			#9 = [#<_ProfileData> + #7]
 			o<linterp> call [#4] [#7 / #6] [#5]
 			#10 = [#<_result>]
+			(LOG, prof #9 = #10)
 			##9 = [#10]
 			#7 = [#7 + 1]
 		o<lz1> endwhile
-o<Linear> endsub
-
-( This generates a profile for a circular cap		)
-( Defined by a chord width and a height value		)
-( Cap is centred on Zero so range is +- the cap radius	)
-( The range for convex gives the length of the chord 	)
-o<Cap> sub  
-	(param #1 is range start 	)
-	(param #2 is range inc  	)	
-	(param #3 is range end		)
-	(param #4 is cap height	h	)
-	(param #5 is vertical offset	)
-	
-	( local #6 is chord length c	)
-	( local #7 is radius R		) 
-	( local #8 is b = 2 * [R - h]	)
-
-	( local #9 num items in profile	)
-	( local #10 count		)
-	( local #11 is prof data address)
-
-	( local #12 is x		)
-	( local #13 is radius c		)
-	( c = x * x + h * h - 2 * R * h	)
-
-	( local #14 is height at x      ) 
-
-	#<_ProfileStart> = [#1]
-	#<_ProfileInc>	 = [#2]
-	#<_ProfileNd>	 = [#3]
-	(first calculate R = [h*h + c*c] / 2 * h )
-	#6 = [[#3 - #1] / 2] ( c is midrange value)
-	#7 = [[#4 * #4 + #6 * #6] / [2 * #4]]
-	#8 = [ 2 * [#7 - #4]] ( b = 2 * [R - h] )
-
-	#9 = FIX[[#3 - #1] / #2]
-	#<_ProfileCount> = [#9 + 1]
-	(initialise count)
-	#10 = [0]
-	o<lz1> while [#10 le #9]
-		#11 = [#<_ProfileData> + #10]
-		#12 = [#1 + [#10 * #2]]
-		#13 = [#12 * #12 + #4 * #4 - 2 * #7 * #4]
-		o<Qsolve> call [1] [#8] [#13]  (should be positive root)
-		o123 if [ #<_nroots> gt 0]
-			#14 = [#<_root1> ]
-		o123 else
-			#14 = [0]
-		o123 endif
-		##11 = [#14 + #5] (height + offset)
-		#10 = [#10 + 1]
-	o<lz1> endwhile
-	
-o<Cap> endsub
-
-( This generates a profile for a circular cap		)
-( Defined by a chord width and a height value		)
-( Cap is centred on Zero so range is +- the cap radius	)
-( The range for convex gives the length of the chord 	)
-o<Cup> sub  
-	(param #1 is range start 	)
-	(param #2 is range inc  	)	
-	(param #3 is range end		)
-	(param #4 is cap height	h	)
-	(param #5 is vertical offset	)
-	
-	( local #6 is chord length c	)
-	( local #7 is radius R		) 
-	( local #8 is b = 2 * [R - h]	)
-
-	( local #9 num items in profile	)
-	( local #10 count		)
-	( local #11 is prof data address)
-
-	( local #12 is x		)
-	( local #13 is radius c		)
-	( c = x * x + h * h - 2 * R * h	)
-
-	( local #14 is height at x      ) 
-
-	#<_ProfileStart> = [#1]
-	#<_ProfileInc>	 = [#2]
-	#<_ProfileNd>	 = [#3]
-	(first calculate R = [h*h + c*c] / 2 * h )
-	#6 = [[#3 - #1] / 2] ( c is midrange value)
-	#7 = [[#4 * #4 + #6 * #6] / [2 * #4]]
-	#8 = [ 2 * [#7 - #4]] ( b = 2 * [R - h] )
-
-	#9 = FIX[[#3 - #1] / #2]
-	#<_ProfileCount> = [#9 + 1]
-	(initialise count)
-	#10 = [0]
-	o<lz2> while [#10 le #9]
-		#11 = [#<_ProfileData> + #10]
-		#12 = [#1 + [#10 * #2]]
-		#13 = [#12 * #12 + #4 * #4 - 2 * #7 * #4]
-		o<Qsolve> call [1] [#8] [#13]  (should be positive root)
-		o222 if [ #<_nroots> gt 0]
-			#14 = [#<_root1> ]
-		o222 else
-			#14 = [0]
-		o222 endif
-		##11 = [#4 - #14 + #5] (height + offset)
-		#10 = [#10 + 1]
-	o<lz2> endwhile
-	
-o<Cup> endsub
-
-
-(Solve quadratic equation ax2 + bx +c = 0	)
-( number of roots returned in #<_nroots>	)
-( values returned in #<_root1> and #<_root2>	)
-o<Qsolve> sub	(param #1 is a		)
-		(param #2 is b		)
-		(param #3 is c		)
-
-		(local #4 is d		)
-
-	#4 = [#2 * #2 - 4 * #1 * #3 ]
-	o<ifq> if [#4 lt 0]
-		#<_nroots> = [0]
-	o<ifq> else if [#4 eq 0]
-		#<_nroots> = [1]
-		#<_root1> = [[-#2 + sqrt [ #4] ] / [2 * #1]]
-	o<ifq> else
-		#<_nroots> = [2]
-		#<_root1> = [[-#2 + sqrt [ #4] ] / [2 * #1]]
-		#<_root2> = [[-#2 - sqrt [ #4] ] / [2 * #1]]
-	o<ifq> endif
-o<Qsolve> endsub
+o<LinearZ> endsub
 
 (******Next Section is movement so change to suit your axis layout *****	)
 ( In my setup the 4 axes of my machine are 					)
@@ -869,17 +750,16 @@ o<MoveToDepth> sub 	(#1 is depth )
 	g1 Z [#1] f[#2]
 o<MoveToDepth> endsub
 
-(******* End of user configurable section ******************************)
+(******* End of user configurable section **************************************)
 
-(***********************************************************************)
-( Model of rose engine assumes the following physical configuration	)
-(	X is standard mill x axis 					)
-(	Y is standard mill y axis					)
-(	Z is cutting depth						)
+(***************************************************************)
+( Model of rose engine assumes the following physical configuration		)
+(	X is standard mill x axis 						)
+(	Y is standard mill y axis						)
+(	Z is cutting depth							)
 (									)
-( You can map these onto a different set of axes 			)
-( By changing the gcode in the section above				)
-(***********************************************************************)
+( You can map these onto a different set of CNC axes using the section above	)
+(***************************************************************)
   
 o<Generate_Path> sub  	(param #1 is start angle		)
 			(param #2 in angle increment		)
@@ -938,47 +818,27 @@ o<Generate_Path> sub  	(param #1 is start angle		)
 	o<MoveToSafeHeight> call
 o<Generate_Path> endsub
 
-(---------------------- Start of main program ------------------)
-#<_UseChuck>		= 0	(not using a chuck		)
-#<_UseBlending>		= 0	(blending rosettes		)
-#<_Safeheight>		= 2	(Safe height			)
-#<_Feedrate>		= 60	(Feed rate			)
-#<_IsRadialProfile>	= 1	(Using a radial profile 	)
-#<_ProfileInZ>		= 1	(profile in Z direction		)
-#<_UseProfile>		= 1	(Definately using a profile 	)
+(LOGOPEN,../../log.txt)
+(---------------------- Start of main program --------------------------)
+#<_UseChuck>		= 0	(not using a chuck	)
+#<_UseBlending>		= 0	(blending rosettes	)
+#<_Safeheight>		= 2	(Safe height		)
+#<_Feedrate>		= 60	(Feed rate		)
+#<_IsRadialProfile>	= 1	
+#<_ProfileInZ>		= 1	(profile in Z direction	)
+#<_UseProfile>		= 1
 
 #<_xstart>	= 0
 #<_xinc>	= 50
 #<_xend>	= 100
-
 (****** end configuration section  ***** )
-
-( change the next line to initialise the profile 				)
-( If you are not using a profile comment out the next uncommented gcode line	) 
-( the example below uses a subroutine to generate a linear profile		)
-			
-( the first three parameters of the built in profile generators are the same 	)
-( being the #1 = start, #3 = increment and #3 = end values of the base range	)
-( for Linear #4 = left end height #5= right end height 				)
-( for Cap #4 = cap height #5 = optional offset					)
-( for Cup #4 = cup depth  #5 = optional offset					)
-
-o<Linear> call  [0] [55] [55] [0] [-20] 
-(o<Cap> call [-50] [1] [50] [10] [-10] 
-(o<Cup> call [-50] [0.5] [50] [10] [0] 
-
-( if you use a probe to get the profile height results use the following	)
-( code to call the sub generated to create the profile				)
-( My probe program creates a file called profile.ngc so				)
-( Example									)
-(   o<profile> call								)
+o<LinearZ> call  [0] [55] [55] [0] [-10]
 
 ( now must add at least one rosette to the spindle )
 ##<_MainSpindle> = 0	( spindle is empty	)
 ##<_Chuck>	 = 0	(chuck is empty		)
 
-(For a wave				)
-(#1 is the Radius			)
+(For a wave #1 is the Radius		)
 (#2 is the Frequency			)
 (#3 is the Amplitude			)
 (#4 is the Phase	default value 0	)
@@ -988,7 +848,7 @@ o<Linear> call  [0] [55] [55] [0] [-20]
 o<CreateWaveRosette> call [0] [6] [50] [0] [0] [1]
 o<AddRosetteToSpindle> call [#<_MainSpindle>] [#<_result>]
 g61
-o<Generate_Path> call [0] [0.25] [360] [-2] [#<_Feedrate>] [0]
+o<Generate_Path> call [0] [1] [360] [-2] [#<_Feedrate>] [0]
 g0 x0 y0 z[#<_Safeheight>]
-
+(LOGCLOSE)
 M2
